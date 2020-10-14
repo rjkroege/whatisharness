@@ -8,17 +8,17 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/drgrib/alfred"	
+	"github.com/drgrib/alfred"
 )
 
 type TitleDesc struct {
 	title string
-	desc string
+	desc  string
 }
 
 func winnowtitle(title []byte, args []string) []byte {
 	titlefields := bytes.Split(title, []byte(", "))
-	
+
 	if len(titlefields) == 1 {
 		return titlefields[0]
 	}
@@ -30,7 +30,7 @@ func winnowtitle(title []byte, args []string) []byte {
 			}
 		}
 	}
-	
+
 	return []byte{}
 }
 
@@ -51,10 +51,9 @@ func mkpath() string {
 	if p9 != "" {
 		p = append(p, filepath.Join(p9, "bin"))
 	}
-	
+
 	return strings.Join(p, ":")
 }
-
 
 func main() {
 	log.Println("hi")
@@ -66,10 +65,10 @@ func main() {
 	// to reconstruct the PATH env.
 	// TODO(rjk): When there are commands that are different between MacOS and
 	// Plan9 but with identical names, we will end up with the wrong page.
-	cmd.Env = append(cmd.Env, "PATH="+ mkpath())
+	cmd.Env = append(cmd.Env, "PATH="+mkpath())
 
 	log.Println(cmd.Env)
-	
+
 	out, err := cmd.Output()
 	if err != nil {
 		// Generate something else probably?
@@ -86,7 +85,7 @@ func main() {
 		if bytes.HasSuffix(v, []byte(": nothing appropriate")) {
 			tds = append(tds, &TitleDesc{
 				title: string(bytes.TrimSuffix(v, []byte(": nothing appropriate"))),
-				desc: "missing whatis",
+				desc:  "missing whatis",
 			})
 			log.Println("nothing appropriate ", string(v))
 			continue
@@ -97,7 +96,7 @@ func main() {
 			cell[0] = winnowtitle(cell[0], os.Args[1:])
 		}
 		log.Println("split the line", len(cell))
-		
+
 		switch {
 		case len(cell) < 1:
 			log.Println("0 cells")
@@ -107,11 +106,11 @@ func main() {
 			tds = append(tds, &TitleDesc{
 				title: string(bytes.TrimSpace(cell[0])),
 			})
-		case len(cell) < 3 && len(cell[0]) > 0 && len(cell[1]) > 0: 
+		case len(cell) < 3 && len(cell[0]) > 0 && len(cell[1]) > 0:
 			log.Println("2 cells", string(cell[0]), string(cell[1]))
 			tds = append(tds, &TitleDesc{
 				title: string(bytes.TrimSpace(cell[0])),
-				desc: string(bytes.TrimSpace(cell[1])),
+				desc:  string(bytes.TrimSpace(cell[1])),
 			})
 		}
 	}
@@ -122,25 +121,24 @@ func main() {
 
 	for _, v := range tds {
 		alfred.Add(alfred.Item{
-		Title:    v.title,
-		Subtitle: v.desc,
-		Arg:      v.title,
-		UID:      v.title,
-		Autocomplete: v.title,
-		})
-	}
-	
-	if len(tds) == 0 && len(os.Args) > 0 {
-		t := string(os.Args[1])
-		alfred.Add(alfred.Item{
-		Title:    t,
-		Subtitle: t,
-		Arg:      t,
-		UID:      t,
-		Autocomplete: t,
+			Title:        v.title,
+			Subtitle:     v.desc,
+			Arg:          v.title,
+			UID:          v.title,
+			Autocomplete: v.title,
 		})
 	}
 
+	if len(tds) == 0 && len(os.Args) > 0 {
+		t := string(os.Args[1])
+		alfred.Add(alfred.Item{
+			Title:        t,
+			Subtitle:     t,
+			Arg:          t,
+			UID:          t,
+			Autocomplete: t,
+		})
+	}
 
 	alfred.Run()
 }
